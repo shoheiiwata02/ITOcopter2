@@ -51,6 +51,7 @@ float x_diff = 0;
 float angle_diff = 0;
 int previous_gap_number = 0;
 float line_number = 0;
+float length = 0;
 float x_diff_dash = 0;
 float TOL_x_diff_dash = 0;
 float TOL_y_diff_dash = 0;
@@ -203,7 +204,6 @@ void led_control(void)
   //else if (Arm_flag ==2 && Flight_mode == ROCKING) rgbled_rocking();
   else if (Arm_flag ==2 && Flight_mode == LINETRACE && line_number == 0) rgbled_lightblue();
   else if (Arm_flag ==2 && Flight_mode == LINETRACE && line_number == 1) rgbled_pink();
-  else if (Arm_flag ==2 && Flight_mode == LINETRACE && line_number == 1 && Phi_ref < 0 ) rgbled_pink_rightOrange();
   else if (Arm_flag ==2 && Flight_mode == REDCIRCLE && (int)(red_circle == 0)) rgbled_redcircle();
   else if (Arm_flag ==2 && Flight_mode == REDCIRCLE && (int)(red_circle == 1)) rgbled_red();
   //else if (Arm_flag == 2 && Red_flag == 0 && Logflag == 1) rgbled_orange();
@@ -1313,35 +1313,16 @@ void processReceiveData(){
   clear_data[strlen(clear_data) -1 ] = '\0';
   char* token;
 
-  if (Flight_mode == LINETRACE){
+  if (1){
     token = strtok(clear_data,",");
     if (token != NULL){
-      x_1_dash = atof(token);
+      red_circle = atof(token);
     }
     token = strtok(NULL,",");
     if (token != NULL){
-      x_2_dash = atof(token);
+      length = atof(token);
     }
-    token = strtok(NULL,",");
-    if (token != NULL){
-      y_1_dash = atof(token);
-    }
-    token = strtok(NULL,",");
-    if (token != NULL){
-      y_2_dash = atof(token);
-    }
-    token = strtok(NULL,",");
-    if (token != NULL){
-      angle_diff = atof(token);
-    }
-    token = strtok(NULL,",");
-    if (token != NULL){
-      line_number = atof(token);
-    }
-    token = strtok(NULL,",");
-    if (token != NULL){
-      x_diff = atof(token);
-    }
+    
     //姿勢によるライン検知の誤差補正
     x_diff = -x_diff;
     angle_diff = -angle_diff*M_PI/180.0;
@@ -1454,17 +1435,17 @@ void processReceiveData(){
 
     // current_time = time_us_64();
     //printf("x : %9.6f\n",x_diff);
-    // printf("angle : %9.6f\n",angle_diff);
-    // printf("psi : %9.6f\n",Xn_est_3);
+    printf("red_circle : %9.6f\n",red_circle);
+    printf("length : %9.6f\n",length);
   }
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  else if (Flight_mode == REDCIRCLE){
-    // token = strtok(clear_data,",");
-    // if (token != NULL){
-    //   red_circle = atof(token);
-    // }
-    red_circle = atof(clear_data);
-  }
+  // else if (Flight_mode == REDCIRCLE){
+  //   // token = strtok(clear_data,",");
+  //   // if (token != NULL){
+  //   //   red_circle = atof(token);
+  //   // }
+  //   red_circle = atof(clear_data);
+  // }
 
   // if(takeoff_counter == 0 || landing_counter ==1){
   //   token = strtok(clear_data,",");
