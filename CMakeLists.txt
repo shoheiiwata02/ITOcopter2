@@ -9,7 +9,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 
 pico_sdk_init()
-include_directories(/home/student01/pico/pico-sdk/eigen)
+# include_directories(/home/student01/pico/pico-sdk/eigen)
+include_directories(/home/shohei/pico/eigen)
+
 add_executable(pico_copter
   pico_copter.cpp
   sensor.cpp
@@ -25,6 +27,7 @@ add_executable(pico_copter
   vl53l1_platform.c
   VL53L1X_api.c
   VL53L1X_calibration.c
+  uart.py
 )
 
 pico_generate_pio_header(pico_copter ${CMAKE_CURRENT_LIST_DIR}/WS2812.pio)
