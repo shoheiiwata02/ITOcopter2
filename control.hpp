@@ -24,7 +24,7 @@ using namespace Eigen;
 // #define ROCKING 1
 // #define AUTO 2
 // #define REDCIRCLE 3
-#define BUFFER_SIZE 16
+#define BUFFER_SIZE 4
 
 
 //グローバル関数の宣言

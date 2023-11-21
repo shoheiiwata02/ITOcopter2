@@ -72,6 +72,7 @@ float L_merker_flag = 0;
 float TOL_x_alpha = 0;
 float TOL_y_alpha = 0;
 float x_alpha = 0;
+int length_count = 0;
 
 //Sensor data
 float Ax,Ay,Az,Wp,Wq,Wr,Mx,My,Mz,Mx0,My0,Mz0,Mx_ave,My_ave,Mz_ave;
@@ -185,6 +186,7 @@ void Hovering(void);
 float lotate_altitude(float l_distance);
 void lotate_altitude_init(float Theta,float Psi,float Phi);
 void processReceiveData();
+void uart_read(uint8_t *buffer, size_t len);
 void receiveData(char c);
 void takeoff_merker(void);
 void landing_merker(void);
@@ -232,7 +234,7 @@ void loop_400Hz(void)
   pwm_clear_irq(7);
 
   //Servo Control
-  servo_control();
+  // servo_control();
 
    //LED Control
   led_control();
@@ -437,12 +439,12 @@ void loop_400Hz(void)
   D_time=E_time-S_time;
 }
 
-void send_data_via_uart(const char* data) {
-    while (*data != '\0') {
-        uart_putc(UART_ID2, *data);
-        data++;
-    }
-}
+// void send_data_via_uart(const char* data) {
+//     while (*data != '\0') {
+//         uart_putc(UART_ID2, *data);
+//         data++;
+//     }
+// }
 
 
 void control_init(void)
@@ -1306,178 +1308,126 @@ void gyroCalibration(void)
 }
 
 //OpenMV通信用----------------------------------------------------------------------------------------------------------------------------
-void processReceiveData(){
+// void processReceiveData(){
+//   
+//   //   //姿勢によるライン検知の誤差補正
+//   //   x_diff = -x_diff;
+//   //   angle_diff = -angle_diff*M_PI/180.0;
+//   //   x_alpha = atan2(x_diff,118);
+//   //   x_diff_dash = 700*tan(Phi + x_alpha); //角度補正
 
-  char* clear_data = buffer;
-  clear_data++;
-  clear_data[strlen(clear_data) -1 ] = '\0';
-  char* token;
+//     //座標変換----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//     // float e11,e12,e13,e21,e22,e23,e31,e32,e33;//透視変換の内部パラメータ
+//     // float E11,E12,E13,E21,E22,E23,E31,E32,E33;//方向余弦行列
+//     // float fx,fy,cx,cy,u1_camera,v1_camera,u2_camera,v2_camera,u1_camera_dash,u2_camera_dash,v1_camera_dash,v2_camera_dash,x1_camera,x2_camera,y1_camera,y2_camera,z1_camera,z2_camera;//透視変換
+//     // float x1_drone,x2_drone,y1_drone,y2_drone,z1_drone,z2_drone;//カメラ座標から機体座標へ座標変換
+//     // float X1_inertia,Y1_inertia,Z1_inertia,X2_inertia,Y2_inertia,Z2_inertia,X0_1_inertia,Y0_1_inertia,Z0_1_inertia,X0_2_inertia,Y0_2_inertia,Z0_2_inertia;//機体座標から慣性座標に座標変換
 
-  if (1){
-    token = strtok(clear_data,",");
-    if (token != NULL){
-      red_circle = atof(token);
-    }
-    token = strtok(NULL,",");
-    if (token != NULL){
-      length = atof(token);
-    }
-    
-    //姿勢によるライン検知の誤差補正
-    x_diff = -x_diff;
-    angle_diff = -angle_diff*M_PI/180.0;
-    x_alpha = atan2(x_diff,118);
-    x_diff_dash = 700*tan(Phi + x_alpha); //角度補正
+//     // //画像カメラからカメラ座標への座標変換
+//     // u1_camera = x_1_dash;
+//     // v1_camera = y_1_dash;
+//     // u2_camera = x_2_dash;
+//     // v2_camera = y_2_dash;
 
-    //座標変換----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    // float e11,e12,e13,e21,e22,e23,e31,e32,e33;//透視変換の内部パラメータ
-    // float E11,E12,E13,E21,E22,E23,E31,E32,E33;//方向余弦行列
-    // float fx,fy,cx,cy,u1_camera,v1_camera,u2_camera,v2_camera,u1_camera_dash,u2_camera_dash,v1_camera_dash,v2_camera_dash,x1_camera,x2_camera,y1_camera,y2_camera,z1_camera,z2_camera;//透視変換
-    // float x1_drone,x2_drone,y1_drone,y2_drone,z1_drone,z2_drone;//カメラ座標から機体座標へ座標変換
-    // float X1_inertia,Y1_inertia,Z1_inertia,X2_inertia,Y2_inertia,Z2_inertia,X0_1_inertia,Y0_1_inertia,Z0_1_inertia,X0_2_inertia,Y0_2_inertia,Z0_2_inertia;//機体座標から慣性座標に座標変換
+//     // //焦点距離は2.8mm
+//     // //受光素子数が横：120,縦：120
+//     // //ピクセルサイズ：2.8㎛×2.8㎛
 
-    // //画像カメラからカメラ座標への座標変換
-    // u1_camera = x_1_dash;
-    // v1_camera = y_1_dash;
-    // u2_camera = x_2_dash;
-    // v2_camera = y_2_dash;
+//     // //画像座標、カメラ座標の原点を中心に移動
+//     // u1_camera_dash = 0.0028*u1_camera + 0.0014 - (0.0028*160)/2;
+//     // u2_camera_dash = 0.0028*u2_camera + 0.0014 - (0.0028*160)/2;
+//     // v1_camera_dash = 0.0028*v1_camera + 0.0014 - (0.0028*120)/2;
+//     // v2_camera_dash = 0.0028*v2_camera + 0.0014 - (0.0028*120)/2;
 
-    // //焦点距離は2.8mm
-    // //受光素子数が横：120,縦：120
-    // //ピクセルサイズ：2.8㎛×2.8㎛
+//     // //イメージセンサの長さ=ピクセルサイズ*受光素子数
+//     // fx = (160/0.336)*2.8;//(横の受光素子数/イメージセンサの横の長さ)*mm単位の焦点距離
+//     // fy = (120/0.448)*2.8;//(縦の受光素子数/イメージセンサの縦の長さ)*mm単位の焦点距離
 
-    // //画像座標、カメラ座標の原点を中心に移動
-    // u1_camera_dash = 0.0028*u1_camera + 0.0014 - (0.0028*160)/2;
-    // u2_camera_dash = 0.0028*u2_camera + 0.0014 - (0.0028*160)/2;
-    // v1_camera_dash = 0.0028*v1_camera + 0.0014 - (0.0028*120)/2;
-    // v2_camera_dash = 0.0028*v2_camera + 0.0014 - (0.0028*120)/2;
+//     // cx = 80.5*0.0028;//x軸方向の光学中心、（横のピクセル数*ピクセルサイズ）/2
+//     // cy = 60.5*0.0028;//y軸方向の光学中心、（縦のピクセル数*ピクセルサイズ）/2
 
-    // //イメージセンサの長さ=ピクセルサイズ*受光素子数
-    // fx = (160/0.336)*2.8;//(横の受光素子数/イメージセンサの横の長さ)*mm単位の焦点距離
-    // fy = (120/0.448)*2.8;//(縦の受光素子数/イメージセンサの縦の長さ)*mm単位の焦点距離
+//     // //透視変換の内部パラメータ（画像座標→カメラ座標）
+//     // e11 = 1/fx;
+//     // e12 = 0;
+//     // e13 = -cx/fy;
+//     // e21 = 0;
+//     // e22 = 1/fy;
+//     // e23 = -cy/fy;
+//     // e31 = 0;
+//     // e32 = 0;
+//     // e33 = 1;
 
-    // cx = 80.5*0.0028;//x軸方向の光学中心、（横のピクセル数*ピクセルサイズ）/2
-    // cy = 60.5*0.0028;//y軸方向の光学中心、（縦のピクセル数*ピクセルサイズ）/2
+//     // //透視変換(画像座標→カメラ座標)
+//     // x1_camera = Kalman_alt*e11*u1_camera_dash;
+//     // y1_camera = Kalman_alt*e22*v1_camera_dash;
+//     // x2_camera = Kalman_alt*e11*u2_camera_dash;
+//     // y2_camera = Kalman_alt*e22*v2_camera_dash;
+//     // z1_camera = Kalman_alt*(e31*u1_camera + e32*v1_camera + 1);
+//     // z2_camera = Kalman_alt*(e31*u2_camera + e32*v2_camera + 1);
 
-    // //透視変換の内部パラメータ（画像座標→カメラ座標）
-    // e11 = 1/fx;
-    // e12 = 0;
-    // e13 = -cx/fy;
-    // e21 = 0;
-    // e22 = 1/fy;
-    // e23 = -cy/fy;
-    // e31 = 0;
-    // e32 = 0;
-    // e33 = 1;
+//     // //カメラ座標から機体座標への座標変換
+//     // y1_drone = x1_camera;
+//     // x1_drone = -y1_camera;
+//     // y2_drone = x2_camera;
+//     // x2_drone = -y2_camera;
+//     // z1_drone = z1_camera;
+//     // z2_drone = z2_camera;
 
-    // //透視変換(画像座標→カメラ座標)
-    // x1_camera = Kalman_alt*e11*u1_camera_dash;
-    // y1_camera = Kalman_alt*e22*v1_camera_dash;
-    // x2_camera = Kalman_alt*e11*u2_camera_dash;
-    // y2_camera = Kalman_alt*e22*v2_camera_dash;
-    // z1_camera = Kalman_alt*(e31*u1_camera + e32*v1_camera + 1);
-    // z2_camera = Kalman_alt*(e31*u2_camera + e32*v2_camera + 1);
+//     // //クォータニオンの計算
+//     // q0 = Xe(0,0);
+//     // q1 = Xe(1,0);
+//     // q2 = Xe(2,0);
+//     // q3 = Xe(3,0);
 
-    // //カメラ座標から機体座標への座標変換
-    // y1_drone = x1_camera;
-    // x1_drone = -y1_camera;
-    // y2_drone = x2_camera;
-    // x2_drone = -y2_camera;
-    // z1_drone = z1_camera;
-    // z2_drone = z2_camera;
+//     // //転置後の方向余弦行列（機体座標→慣性座標）
+//     // E11 = q0^2 + q1^2 + q2^2 + q3^2;
+//     // E12 = 2*(q1*q2 - q0*q3);
+//     // E13 = 2*(q1*q3 - q0*q3);
+//     // E21 = 2*(q1*q2 - q0*q3);
+//     // E22 = q0^2 - q1^2 + q2^2 - q3^2;
+//     // E23 = 2*(q1*q3 - q0*q1);
+//     // E31 = 2*(q1*q3 - q0*q2);
+//     // E32 = 2*(q2*q3 + q0*q1);
+//     // E33 = q0^2 - q1^2 - q2^2 + q3^2;
 
-    // //クォータニオンの計算
-    // q0 = Xe(0,0);
-    // q1 = Xe(1,0);
-    // q2 = Xe(2,0);
-    // q3 = Xe(3,0);
+//     // //機体座標から慣性座標への座標変換
+//     // X1_inertia = E11*x1_drone + E12*y1_drone + E13*z1_drone;
+//     // Y1_inertia = E21*x1_drone + E22*y1_drone + E23*z1_drone;
+//     // Z1_inertia = E31*x1_drone + E32*y1_drone + E33*z1_drone;
 
-    // //転置後の方向余弦行列（機体座標→慣性座標）
-    // E11 = q0^2 + q1^2 + q2^2 + q3^2;
-    // E12 = 2*(q1*q2 - q0*q3);
-    // E13 = 2*(q1*q3 - q0*q3);
-    // E21 = 2*(q1*q2 - q0*q3);
-    // E22 = q0^2 - q1^2 + q2^2 - q3^2;
-    // E23 = 2*(q1*q3 - q0*q1);
-    // E31 = 2*(q1*q3 - q0*q2);
-    // E32 = 2*(q2*q3 + q0*q1);
-    // E33 = q0^2 - q1^2 - q2^2 + q3^2;
+//     // X2_inertia = E11*x2_drone + E12*y2_drone + E13*z2_drone;
+//     // Y2_inertia = E21*x2_drone + E22*y2_drone + E23*z2_drone;
+//     // Z2_inertia = E31*x2_drone + E32*y2_drone + E33*z2_drone;
 
-    // //機体座標から慣性座標への座標変換
-    // X1_inertia = E11*x1_drone + E12*y1_drone + E13*z1_drone;
-    // Y1_inertia = E21*x1_drone + E22*y1_drone + E23*z1_drone;
-    // Z1_inertia = E31*x1_drone + E32*y1_drone + E33*z1_drone;
+//     // //カメラから得られた2点の画像座標を慣性座標上のドローンの位置の座標
+//     // X0_1_inertia = 0 - X1_inertia;
+//     // Y0_1_inertia = 0 - Y1_inertia;
+//     // Z0_1_inertia = 0 - Z1_inertia;
 
-    // X2_inertia = E11*x2_drone + E12*y2_drone + E13*z2_drone;
-    // Y2_inertia = E21*x2_drone + E22*y2_drone + E23*z2_drone;
-    // Z2_inertia = E31*x2_drone + E32*y2_drone + E33*z2_drone;
+//     // X0_2_inertia = 0 - X2_inertia;
+//     // Y0_2_inertia = 0 - Y2_inertia;
+//     // Z0_2_inertia = 0 - Z2_inertia;
 
-    // //カメラから得られた2点の画像座標を慣性座標上のドローンの位置の座標
-    // X0_1_inertia = 0 - X1_inertia;
-    // Y0_1_inertia = 0 - Y1_inertia;
-    // Z0_1_inertia = 0 - Z1_inertia;
+//     // //慣性空間に変換したドローン自身の2点の座標から直線の方程式を出す
+//     // float Inclination,b;
 
-    // X0_2_inertia = 0 - X2_inertia;
-    // Y0_2_inertia = 0 - Y2_inertia;
-    // Z0_2_inertia = 0 - Z2_inertia;
-
-    // //慣性空間に変換したドローン自身の2点の座標から直線の方程式を出す
-    // float Inclination,b;
-
-    // Inclination = (Y0_2_inertia - Y0_1_inertia)/(X0_2_inertia - X0_1_inertia);//直線の方程式の傾き
-    // b = ((X0_2_inertia*Y0_1_inertia)/X0_1_inertia - Y0_2_inertia)/(X0_2_inertia/X0_1_inertia - 1);//直線の方程式の切片
+//     // Inclination = (Y0_2_inertia - Y0_1_inertia)/(X0_2_inertia - X0_1_inertia);//直線の方程式の傾き
+//     // b = ((X0_2_inertia*Y0_1_inertia)/X0_1_inertia - Y0_2_inertia)/(X0_2_inertia/X0_1_inertia - 1);//直線の方程式の切片
 
 
-    Kalman_holizontal(x_diff_dash,angle_diff,(Wp - Pbias),(Wr - Rbias),(Phi - Phi_bias));
-    Line_velocity = Velocity_filter.update(Xn_est_1); //速度
-    Line_range = Range_filter.update(Xn_est_2); //横ずれ
-    Psi = Angle_filter.update(Xn_est_3); //ラインとの角度
+//     // Kalman_holizontal(x_diff_dash,angle_diff,(Wp - Pbias),(Wr - Rbias),(Phi - Phi_bias));
+//     // Line_velocity = Velocity_filter.update(Xn_est_1); //速度
+//     // Line_range = Range_filter.update(Xn_est_2); //横ずれ
+//     // Psi = Angle_filter.update(Xn_est_3); //ラインとの角度
 
-    // current_time = time_us_64();
-    //printf("x : %9.6f\n",x_diff);
-    printf("red_circle : %9.6f\n",red_circle);
-    printf("length : %9.6f\n",length);
-  }
+//     // // current_time = time_us_64();
+//     // //printf("x : %9.6f\n",x_diff);
+//     // printf("red_circle : %f\n",red_circle);
+//     // printf("length : %f\n",length);
+// }
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  // else if (Flight_mode == REDCIRCLE){
-  //   // token = strtok(clear_data,",");
-  //   // if (token != NULL){
-  //   //   red_circle = atof(token);
-  //   // }
-  //   red_circle = atof(clear_data);
-  // }
-
-  // if(takeoff_counter == 0 || landing_counter ==1){
-  //   token = strtok(clear_data,",");
-  //   if (token != NULL){
-  //     TOL_x_diff = atof(token);
-  //   }
-
-  //   token = strtok(NULL,",");
-  //   if (token != NULL){
-  //     TOL_y_diff = atof(token);
-  //   }
-  // }
-
-  // printf("x : %9.6f\n",x_diff);
-  // printf("angle : %9.6f\n",angle_diff);
-  // printf("est velocity: %9.6f\n",Xn_est_1);
-  // printf("y : %9.6f, est : %9.6f\n",x_diff,Xn_est_2);
-  // printf("psi : %9.6f, est : %9.6f\n",angle_diff,Xn_est_3);
-}
-void receiveData(char c){
-  if (buffer_index < BUFFER_SIZE - 1){
-    buffer[buffer_index++] = c;
-  }
-  // printf("%c", c);
-  //終了条件のチェック
-  // if (c == '\n'){
-  if (c == ')'){
-    //buffer[buffer_index] = '\0'; //文字列の終端にヌル文字を追加
-    processReceiveData();
-    buffer_index = 0; //バッファをリセット
-  }
-}
+  
+// }
 
 
 void sensor_read(void)
@@ -1495,34 +1445,34 @@ void sensor_read(void)
   My0 = magnetic_field_mgauss[1];
   Mz0 =-magnetic_field_mgauss[2];
 
-// 加速度・角速度のリミッター
-acc_norm = sqrt(Ax*Ax + Ay*Ay + Az*Az);
-if (acc_norm>800.0) OverG_flag = 1;
-// Acc_norm = acc_filter.update(acc_norm);
-// rate_norm = sqrt(Wp*Wp + Wq*Wq + Wr*Wr);
-// if (rate_norm > 70.0) OverG_flag =1;
+  // 加速度・角速度のリミッター
+  acc_norm = sqrt(Ax*Ax + Ay*Ay + Az*Az);
+  if (acc_norm>800.0) OverG_flag = 1;
+  // Acc_norm = acc_filter.update(acc_norm);
+  // rate_norm = sqrt(Wp*Wp + Wq*Wq + Wr*Wr);
+  // if (rate_norm > 70.0) OverG_flag =1;
 
-/*地磁気校正データ
-回転行列
-[[ 0.65330968  0.75327755 -0.07589064]
- [-0.75666134  0.65302622 -0.03194321]
- [ 0.02549647  0.07829232  0.99660436]]
-中心座標
-122.37559195017053 149.0184454603531 -138.99116060635413
-W
--2.432054387460946
-拡大係数
-0.003077277151877191 0.0031893151610213463 0.0033832794976645804
+  /*地磁気校正データ
+  回転行列
+  [[ 0.65330968  0.75327755 -0.07589064]
+  [-0.75666134  0.65302622 -0.03194321]
+  [ 0.02549647  0.07829232  0.99660436]]
+  中心座標
+  122.37559195017053 149.0184454603531 -138.99116060635413
+  W
+  -2.432054387460946
+  拡大係数
+  0.003077277151877191 0.0031893151610213463 0.0033832794976645804
 
-//回転行列
-const float rot[9]={0.65330968, 0.75327755, -0.07589064,
-                   -0.75666134, 0.65302622, -0.03194321,
-                    0.02549647, 0.07829232,  0.99660436};
-//中心座標
-const float center[3]={122.37559195017053, 149.0184454603531, -138.99116060635413};
-//拡大係数
-const float zoom[3]={0.003077277151877191, 0.0031893151610213463, 0.0033832794976645804};
-*/
+  //回転行列
+  const float rot[9]={0.65330968, 0.75327755, -0.07589064,
+                    -0.75666134, 0.65302622, -0.03194321,
+                      0.02549647, 0.07829232,  0.99660436};
+  //中心座標
+  const float center[3]={122.37559195017053, 149.0184454603531, -138.99116060635413};
+  //拡大係数
+  const float zoom[3]={0.003077277151877191, 0.0031893151610213463, 0.0033832794976645804};
+  */
   //回転行列
   const float rot[9]={-0.78435472, -0.62015392, -0.01402787,
                        0.61753358, -0.78277935,  0.07686857,
@@ -1532,11 +1482,11 @@ const float zoom[3]={0.003077277151877191, 0.0031893151610213463, 0.003383279497
   //拡大係数
   const float zoom[3]={0.002034773458122364, 0.002173892202021849, 0.0021819494099235273};
 
-//回転・平行移動・拡大
+  //回転・平行移動・拡大
   mx1 = zoom[0]*( rot[0]*Mx0 +rot[1]*My0 +rot[2]*Mz0 -center[0]);
   my1 = zoom[1]*( rot[3]*Mx0 +rot[4]*My0 +rot[5]*Mz0 -center[1]);
   mz1 = zoom[2]*( rot[6]*Mx0 +rot[7]*My0 +rot[8]*Mz0 -center[2]);
-//逆回転
+  //逆回転
   Mx = rot[0]*mx1 +rot[3]*my1 +rot[6]*mz1;
   My = rot[1]*mx1 +rot[4]*my1 +rot[7]*mz1;
   Mz = rot[2]*mx1 +rot[5]*my1 +rot[8]*mz1; 
@@ -1580,38 +1530,42 @@ const float zoom[3]={0.003077277151877191, 0.0031893151610213463, 0.003383279497
       if((Kalman_alt - last_Kalman_alt) > 500 || (Kalman_alt - last_Kalman_alt) < 500){
         Kalman_alt = last_Kalman_alt;
       }
-      //printf("%9.6f \n",mu_Yn_est(1,0));
-      // z_acc  = Az-9.80665;
-      //input = Kalman_PID(lotated_distance,z_acc);
+      
     }
   }
-  //OpenMV通信用
-  if ((Flight_mode == LINETRACE) || (Flight_mode == REDCIRCLE) && (i2c_connect == 1)){
-    if(uart_is_readable(UART_ID2)){
-      char c = uart_getc(UART_ID2);
-      receiveData(c);
-    }
 
-    if(Flight_mode == LINETRACE){
-      uart_putc(UART_ID2,'1');
-       if(takeoff_counter == 0 || landing_counter == 1 ){
-        uart_putc(UART_ID2,'3');
+  //OpenMV通信用 データ受信 カメラの中心と対象物との距離を測定
+  if ((Flight_mode == REDCIRCLE)  && (i2c_connect == 1)){
+    if(uart_is_readable(UART_ID2)){
+      float *a;
+      // extern float length;
+      int i;
+      unsigned char buf[BUFFER_SIZE];
+      for (i=0; i<BUFFER_SIZE; i++){
+        buf[i] = uart_getc(UART_ID2);
+      }
+      a = (float*)buf;
+      length = *a;
+
+
+      //自動物資投下
+      if(length <= 5){
+        length_count++;
       }
       else{
-        uart_putc(UART_ID2,'1');
+        length_count = 0;
       }
-    }
-    if(Flight_mode == REDCIRCLE){
-      uart_putc(UART_ID2,'2');
+
+      if(length_count >= 20 && length_count <=30){
+        payload_relese();
+      }
+      else{
+        payload_hook();
+      }
+      // printf("%.8f\n",D_time);
     }
     
   }
-  // 条件が満たされた場合にデータを送信
-  // if (Flight_mode == REDCIRCLE)
-  // {
-  // send_data_via_uart("switch_mode\n");
-  // }
-
 }
 
 void variable_init(void)
