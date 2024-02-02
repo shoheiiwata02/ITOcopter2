@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
 
 pico_sdk_init()
-include_directories(/home/student01/pico/pico-sdk/eigen)
-# include_directories(/home/shohei/pico/eigen)
+# include_directories(/home/student01/pico/pico-sdk/eigen)
+include_directories(/home/shohei/pico/eigen)
 
 add_executable(pico_copter
   pico_copter.cpp
@@ -39,7 +39,8 @@ target_link_libraries(pico_copter
   hardware_pio
   hardware_i2c
   pico_stdlib
-  pico_multicore)
+  pico_multicore
+)
 
 pico_enable_stdio_usb(pico_copter 1)
 pico_enable_stdio_uart(pico_copter 0)

@@ -776,7 +776,7 @@ void rate_control(void)
   p_ref = Pref;
   q_ref = Qref;
   r_ref = Rref;
-  if(Flight_mode != LINETRACE) T_ref = 0.6 * BATTERY_VOLTAGE*(float)(Chdata[2]-CH3MIN)/(CH3MAX-CH3MIN);
+  if(Flight_mode != LINETRACE) T_ref = 0.5 * BATTERY_VOLTAGE*(float)(Chdata[2]-CH3MIN)/(CH3MAX-CH3MIN);
 
   // //高度制御テスト用のコード
   // if(Chdata[SERVO] > 500){
@@ -1548,15 +1548,28 @@ void sensor_read(void)
       length = *a;
 
 
+      // printf("%f %f\n",Theta,length); 
       //自動物資投下
-      if(length <= 5){
+      // printf("Theta:%f\n", Theta);
+      // printf("Phi:%f\n", Phi);
+      // printf("length:%f\n", length);
+
+      float corrected_length_Phi = length * cos(fabsf(Phi));
+      float corrected_length_Theta = length * cos(fabsf(Theta));
+
+      float corrected_length = (corrected_length_Phi + corrected_length_Theta) / 2;
+
+      printf("%d\n", corrected_length);
+          
+      if(corrected_length <= 10){
+      // if(length <= 10){
         length_count++;
       }
       else{
         length_count = 0;
       }
 
-      if(length_count >= 20 && length_count <=30){
+      if(length_count > 3 && length_count <=10){
         payload_relese();
       }
       else{
